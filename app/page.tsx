@@ -6,7 +6,7 @@ export default function Home() {
     <main className="max-w-5xl mx-auto px-4 py-12">
       <section className="text-center">
         <Image
-          src="/next.svg"
+          src="/sacrament.webp"
           alt="Sacrament Meeting Planner"
           width={180}
           height={40}

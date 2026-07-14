@@ -8,8 +8,8 @@ export default function Home() {
         <Image
           src="/sacrament.webp"
           alt="Sacrament Meeting Planner"
-          width={180}
-          height={40}
+          width={300}
+          height={200}
           className="mx-auto mb-8"
           priority
         />

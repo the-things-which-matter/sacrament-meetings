@@ -9,14 +9,21 @@ import {
 
 const sql = neon(`${process.env.DATABASE_URL}`);
 
+function formatDate(date: Date | string): string {
+  if (date instanceof Date) {
+    return `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  return date;
+}
+
 function mapMeeting(row: Record<string, unknown>): SacramentMeeting {
   return {
     id: row.id as number,
 
-    date:
-      row.date instanceof Date
-        ? row.date.toISOString().split("T")[0]
-        : (row.date as string),
+    date: formatDate(row.date as Date | string),
 
     meetingType: row.meeting_type as MeetingType,
 
@@ -129,14 +136,14 @@ export async function getMeetingById(
   return mapMeeting(result[0]);
 }
 
-// Create meeting
+// Create meeting (Week 04)
 export async function addMeeting(
   meeting: SacramentMeeting
 ): Promise<void> {
   throw new Error("Not implemented yet");
 }
 
-// Update meeting
+// Update meeting (Week 04)
 export async function updateMeeting(
   id: number,
   meeting: SacramentMeeting
@@ -144,7 +151,7 @@ export async function updateMeeting(
   throw new Error("Not implemented yet");
 }
 
-// Delete meeting
+// Delete meeting (Week 04)
 export async function deleteMeeting(
   id: number
 ): Promise<void> {

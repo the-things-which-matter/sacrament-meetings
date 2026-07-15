@@ -1,27 +1,64 @@
 import { neon } from "@neondatabase/serverless";
-import { SacramentMeeting } from "./types";
+import {
+  SacramentMeeting,
+  Hymn,
+  SpeakerItem,
+  WardBusinessItem,
+  MeetingType,
+} from "./types";
 
 const sql = neon(`${process.env.DATABASE_URL}`);
 
-function mapMeeting(row: any): SacramentMeeting {
+function mapMeeting(row: Record<string, unknown>): SacramentMeeting {
   return {
-    id: row.id,
+    id: row.id as number,
+
     date:
-    row.date instanceof Date
-    ? row.date.toISOString().split("T")[0]
-    : row.date,
-    meetingType: row.meeting_type,
-    presiding: row.presiding,
-    conducting: row.conducting,
-    announcements: row.announcements ?? [],
-    openingHymn: row.opening_hymn,
-    openingPrayer: row.opening_prayer,
-    wardBusiness: row.ward_business ?? [],
-    stakeBusiness: row.stake_business,
-    sacramentHymn: row.sacrament_hymn,
-    speakers: row.speakers ?? [],
-    closingHymn: row.closing_hymn,
-    closingPrayer: row.closing_prayer,
+      row.date instanceof Date
+        ? row.date.toISOString().split("T")[0]
+        : (row.date as string),
+
+    meetingType: row.meeting_type as MeetingType,
+
+    presiding: row.presiding as string,
+
+    conducting: row.conducting as string,
+
+    announcements:
+      (row.announcements as string[] | null) ?? [],
+
+    openingHymn:
+      (row.opening_hymn as Hymn) ?? {
+        number: 0,
+        title: "",
+      },
+
+    openingPrayer:
+      (row.opening_prayer as string) ?? "",
+
+    wardBusiness:
+      (row.ward_business as WardBusinessItem[] | null) ?? [],
+
+    stakeBusiness:
+      (row.stake_business as boolean) ?? false,
+
+    sacramentHymn:
+      (row.sacrament_hymn as Hymn) ?? {
+        number: 0,
+        title: "",
+      },
+
+    speakers:
+      (row.speakers as SpeakerItem[] | null) ?? [],
+
+    closingHymn:
+      (row.closing_hymn as Hymn) ?? {
+        number: 0,
+        title: "",
+      },
+
+    closingPrayer:
+      (row.closing_prayer as string) ?? "",
   };
 }
 
@@ -51,8 +88,6 @@ export async function getMeetings(
         LIMIT 5
         OFFSET ${offset}
       `;
-  
-      
 
   return rows.map(mapMeeting);
 }
@@ -94,13 +129,14 @@ export async function getMeetingById(
   return mapMeeting(result[0]);
 }
 
-// Week 04 placeholders
+// Create meeting
 export async function addMeeting(
   meeting: SacramentMeeting
 ): Promise<void> {
   throw new Error("Not implemented yet");
 }
 
+// Update meeting
 export async function updateMeeting(
   id: number,
   meeting: SacramentMeeting
@@ -108,6 +144,7 @@ export async function updateMeeting(
   throw new Error("Not implemented yet");
 }
 
+// Delete meeting
 export async function deleteMeeting(
   id: number
 ): Promise<void> {

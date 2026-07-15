@@ -1,173 +1,115 @@
+import { neon } from "@neondatabase/serverless";
 import { SacramentMeeting } from "./types";
 
-const meetings: SacramentMeeting[] = [
-  {
-    id: 1,
-    date: "2026-05-03",
-    meetingType: "regular",
-    presiding: "Bishop John Smith",
-    conducting: "Brother David Brown",
-    announcements: [
-      "Youth activity this Friday",
-      "Ward service project next Saturday",
-    ],
-    openingHymn: {
-      number: 5,
-      title: "High on the Mountain Top",
-    },
-    openingPrayer: "Brother Michael Johnson",
-    wardBusiness: [
-      {
-        description: "Sustaining of new Primary teachers",
-      },
-    ],
-    stakeBusiness: false,
-    sacramentHymn: {
-      number: 169,
-      title: "As Now We Take the Sacrament",
-    },
-    speakers: [
-      {
-        name: "Sister Mary Williams",
-        topic: "Faith in Jesus Christ",
-        type: "speaker",
-      },
-      {
-        name: "Brother Peter Davis",
-        topic: "Service and Charity",
-        type: "speaker",
-      },
-    ],
-    closingHymn: {
-      number: 152,
-      title: "God Be With You Till We Meet Again",
-    },
-    closingPrayer: "Brother Thomas Lee",
-  },
+const sql = neon(`${process.env.DATABASE_URL}`);
 
-  {
-    id: 2,
-    date: "2026-05-10",
-    meetingType: "testimony",
-    presiding: "Bishop John Smith",
-    conducting: "Brother David Brown",
-    openingHymn: {
-      number: 85,
-      title: "How Firm a Foundation",
-    },
-    openingPrayer: "Sister Anna Clark",
-    wardBusiness: [],
-    stakeBusiness: false,
-    sacramentHymn: {
-      number: 193,
-      title: "I Stand All Amazed",
-    },
-    speakers: [],
-    closingHymn: {
-      number: 228,
-      title: "You Can Make the Pathway Bright",
-    },
-    closingPrayer: "Brother Mark Wilson",
-  },
-
-  {
-    id: 3,
-    date: "2026-05-17",
-    meetingType: "regular",
-    presiding: "Bishop John Smith",
-    conducting: "Brother David Brown",
-    openingHymn: {
-      number: 30,
-      title: "Come, Come Ye Saints",
-    },
-    openingPrayer: "Brother James Clark",
-    wardBusiness: [],
-    stakeBusiness: false,
-    sacramentHymn: {
-      number: 190,
-      title: "In Memory of the Crucified",
-    },
-    speakers: [
-      {
-        name: "Sister Rachel Green",
-        topic: "The Gospel of Jesus Christ",
-        type: "speaker",
-      },
-    ],
-    closingHymn: {
-      number: 154,
-      title: "Father in Heaven",
-    },
-    closingPrayer: "Sister Linda Brown",
-  },
-
-  {
-    id: 4,
-    date: "2026-05-24",
-    meetingType: "stake",
-    presiding: "Stake President",
-    conducting: "Stake Counselor",
-    openingHymn: {
-      number: 100,
-      title: "Nearer My God to Thee",
-    },
-    openingPrayer: "Brother Alan White",
-    wardBusiness: [],
-    stakeBusiness: true,
-    sacramentHymn: {
-      number: 184,
-      title: "Upon the Cross of Calvary",
-    },
-    speakers: [
-      {
-        name: "Stake President",
-        topic: "Following Christ",
-        type: "speaker",
-      },
-    ],
-    closingHymn: {
-      number: 270,
-      title: "I'll Go Where You Want Me to Go",
-    },
-    closingPrayer: "Sister Jane Brown",
-  },
-
-  {
-    id: 5,
-    date: "2026-05-31",
-    meetingType: "general",
-    presiding: "General Authority",
-    conducting: "Stake Leader",
-    openingHymn: {
-      number: 119,
-      title: "Come We That Love the Lord",
-    },
-    openingPrayer: "Brother Daniel Smith",
-    wardBusiness: [],
-    stakeBusiness: false,
-    sacramentHymn: {
-      number: 195,
-      title: "There Is a Green Hill Far Away",
-    },
-    speakers: [
-      {
-        name: "Guest Speaker",
-        topic: "Building Faith",
-        type: "speaker",
-      },
-    ],
-    closingHymn: {
-      number: 223,
-      title: "Have I Done Any Good?",
-    },
-    closingPrayer: "Brother Paul Young",
-  },
-];
-
-export function getMeetings(): SacramentMeeting[] {
-  return meetings;
+function mapMeeting(row: any): SacramentMeeting {
+  return {
+    id: row.id,
+    date:
+    row.date instanceof Date
+    ? row.date.toISOString().split("T")[0]
+    : row.date,
+    meetingType: row.meeting_type,
+    presiding: row.presiding,
+    conducting: row.conducting,
+    announcements: row.announcements ?? [],
+    openingHymn: row.opening_hymn,
+    openingPrayer: row.opening_prayer,
+    wardBusiness: row.ward_business ?? [],
+    stakeBusiness: row.stake_business,
+    sacramentHymn: row.sacrament_hymn,
+    speakers: row.speakers ?? [],
+    closingHymn: row.closing_hymn,
+    closingPrayer: row.closing_prayer,
+  };
 }
 
-export function getMeetingById(id: number): SacramentMeeting | undefined {
-  return meetings.find((meeting) => meeting.id === id);
+export async function getMeetings(
+  query = "",
+  page = 1
+): Promise<SacramentMeeting[]> {
+  const offset = (page - 1) * 5;
+
+  const rows = query
+    ? await sql`
+        SELECT *
+        FROM meetings
+        WHERE
+          presiding ILIKE ${`%${query}%`}
+          OR conducting ILIKE ${`%${query}%`}
+          OR CAST(meeting_type AS TEXT) ILIKE ${`%${query}%`}
+          OR speakers::text ILIKE ${`%${query}%`}
+        ORDER BY date
+        LIMIT 5
+        OFFSET ${offset}
+      `
+    : await sql`
+        SELECT *
+        FROM meetings
+        ORDER BY date
+        LIMIT 5
+        OFFSET ${offset}
+      `;
+  
+      
+
+  return rows.map(mapMeeting);
+}
+
+export async function getMeetingsTotalPages(
+  query = ""
+): Promise<number> {
+  const result = query
+    ? await sql`
+        SELECT COUNT(*)
+        FROM meetings
+        WHERE
+          presiding ILIKE ${`%${query}%`}
+          OR conducting ILIKE ${`%${query}%`}
+          OR CAST(meeting_type AS TEXT) ILIKE ${`%${query}%`}
+          OR speakers::text ILIKE ${`%${query}%`}
+      `
+    : await sql`
+        SELECT COUNT(*)
+        FROM meetings
+      `;
+
+  return Math.ceil(Number(result[0].count) / 5);
+}
+
+export async function getMeetingById(
+  id: number
+): Promise<SacramentMeeting | undefined> {
+  const result = await sql`
+    SELECT *
+    FROM meetings
+    WHERE id = ${id}
+  `;
+
+  if (result.length === 0) {
+    return undefined;
+  }
+
+  return mapMeeting(result[0]);
+}
+
+// Week 04 placeholders
+export async function addMeeting(
+  meeting: SacramentMeeting
+): Promise<void> {
+  throw new Error("Not implemented yet");
+}
+
+export async function updateMeeting(
+  id: number,
+  meeting: SacramentMeeting
+): Promise<void> {
+  throw new Error("Not implemented yet");
+}
+
+export async function deleteMeeting(
+  id: number
+): Promise<void> {
+  throw new Error("Not implemented yet");
 }

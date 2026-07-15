@@ -136,14 +136,14 @@ export async function getMeetingById(
   return mapMeeting(result[0]);
 }
 
-// Create meeting (Week 04)
+
 export async function addMeeting(
   meeting: SacramentMeeting
 ): Promise<void> {
   throw new Error("Not implemented yet");
 }
 
-// Update meeting (Week 04)
+
 export async function updateMeeting(
   id: number,
   meeting: SacramentMeeting
@@ -151,7 +151,7 @@ export async function updateMeeting(
   throw new Error("Not implemented yet");
 }
 
-// Delete meeting (Week 04)
+
 export async function deleteMeeting(
   id: number
 ): Promise<void> {

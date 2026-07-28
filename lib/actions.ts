@@ -4,6 +4,9 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+import { signIn } from "@/auth";
+import { AuthError } from "next-auth";
+
 import {
   addMeeting,
   updateMeeting,
@@ -11,6 +14,7 @@ import {
 } from "./meetings-db";
 
 import { MeetingType } from "./types";
+
 
 const MeetingFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -28,6 +32,7 @@ const MeetingFormSchema = z.object({
   conducting: z.string().min(1, "Conducting is required"),
 });
 
+
 export type State = {
   errors?: {
     date?: string[];
@@ -39,16 +44,52 @@ export type State = {
 };
 
 
+
+// AUTHENTICATION ACTION
+
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData
+) {
+  try {
+    await signIn("credentials", formData);
+
+  } catch (error) {
+
+    if (error instanceof AuthError) {
+
+      switch (error.type) {
+
+        case "CredentialsSignin":
+          return "Invalid email or password.";
+
+        default:
+          return "Something went wrong.";
+      }
+    }
+
+    throw error;
+  }
+}
+
+
+
+// CREATE MEETING
+
+
 export async function createMeeting(
   prevState: State,
   formData: FormData
 ): Promise<State> {
+
   const validatedFields = MeetingFormSchema.safeParse({
     date: formData.get("date"),
     meetingType: formData.get("meetingType"),
     presiding: formData.get("presiding"),
     conducting: formData.get("conducting"),
   });
+
 
   if (!validatedFields.success) {
     return {
@@ -57,8 +98,11 @@ export async function createMeeting(
     };
   }
 
+
   try {
+
     await addMeeting({
+
       id: 0,
 
       date: validatedFields.data.date,
@@ -96,9 +140,12 @@ export async function createMeeting(
       },
 
       closingPrayer: "",
+
     });
 
+
   } catch (error) {
+
     console.error("CREATE MEETING ERROR:", error);
 
     return {
@@ -106,9 +153,14 @@ export async function createMeeting(
     };
   }
 
+
   revalidatePath("/meetings");
+
   redirect("/meetings");
 }
+
+
+// UPDATE MEETING
 
 
 export async function updateMeetingAction(
@@ -117,82 +169,139 @@ export async function updateMeetingAction(
   formData: FormData
 ): Promise<State> {
 
+
   const validatedFields = MeetingFormSchema.safeParse({
+
     date: formData.get("date"),
+
     meetingType: formData.get("meetingType"),
+
     presiding: formData.get("presiding"),
+
     conducting: formData.get("conducting"),
+
   });
 
 
+
   if (!validatedFields.success) {
+
     return {
+
       errors: validatedFields.error.flatten().fieldErrors,
+
       message: "Please correct the highlighted fields.",
+
     };
+
   }
 
 
+
   try {
+
+
     await updateMeeting(id, {
+
 
       id,
 
+
       date: validatedFields.data.date,
+
 
       meetingType:
         validatedFields.data.meetingType as MeetingType,
 
-      presiding: validatedFields.data.presiding,
 
-      conducting: validatedFields.data.conducting,
+      presiding:
+        validatedFields.data.presiding,
+
+
+      conducting:
+        validatedFields.data.conducting,
+
 
       announcements: [],
 
+
       openingHymn: {
+
         number: 0,
+
         title: "",
+
       },
+
 
       openingPrayer: "",
 
+
       wardBusiness: [],
+
 
       stakeBusiness: false,
 
+
       sacramentHymn: {
+
         number: 0,
+
         title: "",
+
       },
+
 
       speakers: [],
 
+
       closingHymn: {
+
         number: 0,
+
         title: "",
+
       },
 
+
       closingPrayer: "",
+
     });
+
+
 
   } catch (error) {
 
+
     console.error("UPDATE MEETING ERROR:", error);
 
+
     return {
+
       message: "Database Error: Failed to update meeting.",
+
     };
+
   }
 
 
+
   revalidatePath("/meetings");
+
   redirect("/meetings");
+
 }
+
+
+
+
+// DELETE MEETING
 
 
 export async function deleteMeetingAction(
   id: number
 ): Promise<void> {
+
 
   try {
 
@@ -200,14 +309,20 @@ export async function deleteMeetingAction(
 
   } catch (error) {
 
+
     console.error("DELETE MEETING ERROR:", error);
+
 
     throw new Error(
       "Database Error: Failed to delete meeting."
     );
+
   }
 
 
+
   revalidatePath("/meetings");
+
   redirect("/meetings");
+
 }

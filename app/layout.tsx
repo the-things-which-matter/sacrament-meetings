@@ -15,8 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sacrament Meeting Planner",
-  description: "Plan and view sacrament meeting programs",
+  title: {
+    default: "Sacrament Meeting Planner",
+    template: "%s | Sacrament Meeting Planner",
+  },
+  description:
+    "A sacrament meeting planner for bishoprics to organize and manage meeting programs.",
+  metadataBase: new URL(
+    "https://sacrament-meetings-ten.vercel.app"
+  ),
 };
 
 export default function RootLayout({

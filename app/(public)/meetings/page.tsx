@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import MeetingCard from "@/components/MeetingCard";
 import {
   getMeetings,
   getMeetingsTotalPages,
 } from "@/lib/meetings-db";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Meetings",
+  description:
+    "View sacrament meeting schedules, programs, and details.",
+};
 
 export default async function MeetingsPage({
   searchParams,

@@ -21,9 +21,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, password } = parsed.data;
 
-        // Temporary demo user
+        
         const user = {
-          email: "bishop@example.com",
+          email: "admin@sacramentmeetings.com",
           passwordHash: await bcrypt.hash("password123", 10),
           name: "Bishop",
         };

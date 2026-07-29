@@ -4,7 +4,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { authConfig } from "./auth.config";
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
 
   providers: [
@@ -21,7 +21,7 @@ export const { auth, signIn, signOut } = NextAuth({
 
         const { email, password } = parsed.data;
 
-      
+        // Temporary demo user
         const user = {
           email: "bishop@example.com",
           passwordHash: await bcrypt.hash("password123", 10),
@@ -35,7 +35,12 @@ export const { auth, signIn, signOut } = NextAuth({
           user.passwordHash
         );
 
-        if (passwordsMatch) return user;
+        if (passwordsMatch) {
+          return {
+            name: user.name,
+            email: user.email,
+          };
+        }
 
         return null;
       },
